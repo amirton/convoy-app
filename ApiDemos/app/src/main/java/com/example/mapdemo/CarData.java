@@ -7,7 +7,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class CarData {
+    public static Object leaderWayLock = new Object();
+
     public static HashMap<String, Car> cars = new HashMap<>();
+
+    public static ArrayList<LatLng> leaderWay = new ArrayList<>();
 
     public static ArrayList<LatLng> getLatLngs(){
         ArrayList<LatLng> result = new ArrayList<>();

@@ -65,6 +65,8 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 import static com.example.mapdemo.CarData.cars;
+import static com.example.mapdemo.CarData.leaderWay;
+import static com.example.mapdemo.R.drawable.car;
 import static com.example.mapdemo.R.id.map;
 
 /**
@@ -81,8 +83,6 @@ public class MyLocationDemoActivity extends AppCompatActivity
 
     @BindView(R.id.home_btn_emergency)
     Button button;
-
-    PolylineOptions line = new PolylineOptions();
 
     Ringtone alarm;
 
@@ -223,12 +223,17 @@ public class MyLocationDemoActivity extends AppCompatActivity
                     mMap.addMarker(new MarkerOptions().position(cars.get(car).getLatLng())
                             .title(car)
                             .icon(BitmapDescriptorFactory.fromResource(cars.get(car).color)));
-                    if(!gambi && cars.get(car).isLeader()){
-                        line.add(cars.get(car).getLatLng());
-                        line.width(5).color(Color.RED);
-                        mMap.addPolyline(line);
-                    }
                 }
+
+                PolylineOptions line = new PolylineOptions();
+
+                synchronized (CarData.leaderWayLock) {
+                    LatLng[] points = new LatLng[leaderWay.size()];
+                    line.add(leaderWay.toArray(points));
+                }
+
+                line.width(5).color(Color.RED);
+                mMap.addPolyline(line);
 
                 try {
                     moveMap();
@@ -338,7 +343,6 @@ public class MyLocationDemoActivity extends AppCompatActivity
                 .setPositiveButton("Sim", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        Toast.makeText(MyLocationDemoActivity.this, "Enviar mensagem pra o resto da galera", Toast.LENGTH_LONG).show();
                         Map<String, String> result = new HashMap();
 
                         result.put("isEmergency", true+"");

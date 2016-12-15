@@ -4,6 +4,7 @@ import android.content.DialogInterface;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.widget.Toast;
@@ -18,6 +19,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import static com.example.mapdemo.CarData.cars;
+import static com.example.mapdemo.CarData.leaderWay;
 
 /**
  * Created by amirt on 09/12/2016.
@@ -43,29 +45,40 @@ public class NotificationHandler extends FirebaseMessagingService {
             alarm = RingtoneManager.getRingtone(getApplicationContext(),
                     RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM));
             playSound();
-            (new AlertDialog.Builder(this)).setTitle("EMERGENCY STOP!")
-                    .setMessage("Houve uma parada emergencial")
-                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            stopSound();
-                            dialogInterface.dismiss();
-                        }
-                    }).create().show();
+            Handler handler = new Handler(Looper.getMainLooper());
+            handler.post(new Runnable(){
+                @Override
+                public void run() {
+                    (new AlertDialog.Builder(MyLocationDemoActivity.getInstance())).setTitle("Parada de emergência!")
+                            .setMessage("Houve uma parada emergencial")
+                            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    stopSound();
+                                    dialogInterface.dismiss();
+                                }
+                            }).create().show();
+                }});
 
         } else if (data.isProgrammedStop()){
             alarm = RingtoneManager.getRingtone(getApplicationContext(),
                     RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM));
             playSound();
-            (new AlertDialog.Builder(this)).setTitle("PROGRAMMED STOP!")
-                    .setMessage("O houve uma parada programada")
-                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            stopSound();
-                            dialogInterface.dismiss();
-                        }
-                    }).create().show();
+
+            Handler handler = new Handler(Looper.getMainLooper());
+            handler.post(new Runnable(){
+                @Override
+                public void run() {
+                    (new AlertDialog.Builder(MyLocationDemoActivity.getInstance())).setTitle("Parada programada!")
+                            .setMessage("O houve uma parada programada")
+                            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    stopSound();
+                                    dialogInterface.dismiss();
+                                }
+                            }).create().show();
+                }});
         } else if (data.hasCarId()
                 && data.hasLatitude()
                 && data.hasLongitude()
@@ -94,29 +107,28 @@ public class NotificationHandler extends FirebaseMessagingService {
 
     private void updateCarPosition(NotificationData data) {
         Car car;
-        if (!cars.containsKey(data.getCarId() + "")){
+        if (!cars.containsKey(data.getCarId() + "")) {
             car = new Car();
-            if(data.isLeader()){
-                car.color = R.drawable.bluecar;
-                car.isLeader = true;
-            }else{
-                car.color = R.drawable.car;
-                car.isLeader = false;
-            }
-            car.latitude = data.getLatitude();
-            car.longitude = data.getLongitude();
-            car.lastSpeed = data.getLastSpeed();
             cars.put(data.getCarId() + "", car);
-        }
-        //TODO nao entendi
-        /*else {
-            car = cars.get(data.getCarId() + "");
+        } else {
+            car = cars.get(data.getCarId());
         }
 
         car.latitude = data.getLatitude();
         car.longitude = data.getLongitude();
         car.lastSpeed = data.getLastSpeed();
-        */
+
+        if(data.isLeader()){
+            car.color = R.drawable.bluecar;
+            car.isLeader = true;
+            synchronized (CarData.leaderWayLock) {
+                leaderWay.add(car.getLatLng());
+            }
+        } else {
+            car.color = R.drawable.car;
+            car.isLeader = false;
+        }
+
         if (MyLocationDemoActivity.getInstance() != null){
             MyLocationDemoActivity.getInstance().updateMap(true);
         }
@@ -144,7 +156,7 @@ public class NotificationHandler extends FirebaseMessagingService {
             dataBuilder.setProgrammedStop(Boolean.parseBoolean(rawData.get("isProgrammedStop")));
         }
         if (rawData.containsKey("isLeader")){
-            dataBuilder.setProgrammedStop(Boolean.parseBoolean(rawData.get("isProgrammedStop")));
+            dataBuilder.setLeader(Boolean.parseBoolean(rawData.get("isLeader")));
         }
 
         return dataBuilder.build();

@@ -32,7 +32,7 @@ class UpdatePositionTask extends AsyncTask<String, Void, Void> {
     }
 
     private String updatePosition(String[] json) throws IOException {
-        String reqBody = "\"" + json[0].replace("\"", "\\\"") + "\"";
+        String reqBody = "\"" + json[0].replace("\"", "\\\"").replace("\\\"true\\\"", "true").replace("\\\"false\\\"", "false") + "\"";
         RequestBody body = RequestBody.create(JSON, reqBody);
         Request request = new Request.Builder()
                 .post(body)
