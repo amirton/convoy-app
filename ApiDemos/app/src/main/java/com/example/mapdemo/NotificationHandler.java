@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 
 import static com.example.mapdemo.CarData.cars;
 import static com.example.mapdemo.CarData.leaderWay;
+import static com.example.mapdemo.R.drawable.car;
 
 /**
  * Created by amirt on 09/12/2016.
@@ -42,6 +43,10 @@ public class NotificationHandler extends FirebaseMessagingService {
         NotificationData data = parseNotificationData(rawData);
 
         if (data.isEmergency()){
+            if (cars.containsKey(data.getCarId())){
+                ((Car)cars.get(data.getCarId())).isInEmergency = true;
+            }
+
             alarm = RingtoneManager.getRingtone(getApplicationContext(),
                     RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM));
             playSound();
@@ -118,14 +123,16 @@ public class NotificationHandler extends FirebaseMessagingService {
         car.longitude = data.getLongitude();
         car.lastSpeed = data.getLastSpeed();
 
+        if (car.lastSpeed > 0){
+            car.isInEmergency = false;
+        }
+
         if(data.isLeader()){
-            car.color = R.drawable.bluecar;
             car.isLeader = true;
             synchronized (CarData.leaderWayLock) {
                 leaderWay.add(car.getLatLng());
             }
         } else {
-            car.color = R.drawable.car;
             car.isLeader = false;
         }
 

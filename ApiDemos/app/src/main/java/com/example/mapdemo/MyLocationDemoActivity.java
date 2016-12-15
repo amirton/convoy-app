@@ -222,7 +222,7 @@ public class MyLocationDemoActivity extends AppCompatActivity
                 for (String car : cars.keySet()){
                     mMap.addMarker(new MarkerOptions().position(cars.get(car).getLatLng())
                             .title(car)
-                            .icon(BitmapDescriptorFactory.fromResource(cars.get(car).color)));
+                            .icon(BitmapDescriptorFactory.fromResource(cars.get(car).getColor())));
                 }
 
                 PolylineOptions line = new PolylineOptions();
